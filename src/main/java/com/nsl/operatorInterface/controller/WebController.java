@@ -13,6 +13,9 @@ import com.nsl.operatorInterface.entity.UserMaster;
 import com.nsl.operatorInterface.exception.exceptionHandler.UserNotFoundException;
 import com.nsl.operatorInterface.service.WebService;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @RequestMapping("/rest/nsl/operatorInterface/")
 @RestController
 public class WebController {
@@ -28,4 +31,5 @@ public class WebController {
         ApiResponse response = new ApiResponse(HttpStatus.OK.value(), "user Loggedin successfully", user);
         return ResponseEntity.ok(response);
     }
+
 }

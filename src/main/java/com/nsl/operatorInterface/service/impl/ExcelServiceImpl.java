@@ -1,38 +1,46 @@
 package com.nsl.operatorInterface.service.impl;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.nsl.operatorInterface.entity.PackingOrderDetails;
+import com.nsl.operatorInterface.entity.UniqueCodePrintedDataDetails;
+import com.nsl.operatorInterface.repository.PackingOrderDetailsRepository;
+import com.nsl.operatorInterface.repository.UniqueCodePrintedDataDetailsRepository;
+import com.nsl.operatorInterface.service.ExcelService;
+import com.nsl.operatorInterface.utility.ExcelSheetProcessor;
+import com.nsl.operatorInterface.utility.UIDGenerator;
+import com.opencsv.CSVReader;
+
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.poi.openxml4j.opc.OPCPackage;
-import org.apache.poi.xssf.eventusermodel.XSSFReader;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-import com.nsl.operatorInterface.entity.PackingOrderDetails;
-import com.nsl.operatorInterface.repository.PackingOrderDetailsRepository;
-import com.nsl.operatorInterface.service.ExcelService;
-import com.nsl.operatorInterface.utility.ExcelSheetProcessor;
-import com.nsl.operatorInterface.utility.UIDGenerator;
-import com.opencsv.CSVReader;
-
 @Service
 public class ExcelServiceImpl implements ExcelService {
-	
-	@Autowired private PackingOrderDetailsRepository repository;
+    @Autowired private PackingOrderDetailsRepository repository;
+    @Autowired private UniqueCodePrintedDataDetailsRepository uniqueCodePrintedDataDetailsRepository;
 
+    @Async
     @Override
     public void uploadFile(MultipartFile file) throws Exception {
         String fileName = file.getOriginalFilename();
-
         if (fileName == null) throw new IllegalArgumentException("Invalid file");
+        byte[] fileBytes = file.getBytes(); // buffer for safe thread use
 
         if (fileName.endsWith(".csv")) {
-            processCSV(file.getInputStream());
+            try (InputStream stream = new ByteArrayInputStream(fileBytes)) {
+                processCSV(stream);
+            }
         } else if (fileName.endsWith(".xlsx")) {
-            processExcel(file.getInputStream());
+            try (InputStream stream = new ByteArrayInputStream(fileBytes)) {
+                ExcelSheetProcessor.processSheet(stream, repository);
+            }
         } else {
             throw new IllegalArgumentException("Only .csv or .xlsx supported");
         }
@@ -43,23 +51,25 @@ public class ExcelServiceImpl implements ExcelService {
             String[] line;
             boolean headerSkipped = false;
             List<PackingOrderDetails> batch = new ArrayList<>();
-
             while ((line = reader.readNext()) != null) {
-                if (!headerSkipped) { // Skip header row
+                if (!headerSkipped) {
                     headerSkipped = true;
                     continue;
                 }
                 PackingOrderDetails order = new PackingOrderDetails();
+                
+                String Uid = UIDGenerator.generateUID(line[0]);
+                
                 order.setPlantCode(line[0]);
                 order.setProductionOrderNo(line[1]);
                 order.setLotNo(line[2]);
                 order.setQty(line[3]);
                 order.setIndentNo(line[4]);
                 order.setSapStatus(line[5]);
-                order.setUid(UIDGenerator.generateUID(line[0]));
+                order.setUid(Uid);
                 order.setCreatedOn(LocalDateTime.now());
-                order.setModifiedOn(LocalDateTime.now());
                 order.setActive(true);
+                processSequenceNoAndUid(line[1],Uid);/** Process Unique Code Details **/
                 batch.add(order);
 
                 if (batch.size() == 1000) {
@@ -71,16 +81,19 @@ public class ExcelServiceImpl implements ExcelService {
         }
     }
 
-    private void processExcel(InputStream inputStream) throws Exception {
-        OPCPackage pkg = OPCPackage.open(inputStream);
-        XSSFReader reader = new XSSFReader(pkg);
-        var iter = reader.getSheetsData();
+	public void processSequenceNoAndUid(String productionOrderNo, String uid) throws Exception {
+		UniqueCodePrintedDataDetails uniqueCodePrintDetails = new UniqueCodePrintedDataDetails();
+		uniqueCodePrintDetails.setUidCode(uid);
+		uniqueCodePrintDetails.setProductionOrderNo(productionOrderNo);
+		uniqueCodePrintDetails.setSerialNumber(generateNextSerialNumber());
+		uniqueCodePrintedDataDetailsRepository.save(uniqueCodePrintDetails);
+	}
 
-        while (iter.hasNext()) {
-            try (InputStream sheetStream = iter.next()) {
-                ExcelSheetProcessor.processSheet(sheetStream, repository);
-            }
-        }
-    }
-
+	public Long generateNextSerialNumber() throws Exception {
+		Long lastSerial = uniqueCodePrintedDataDetailsRepository.findMaxSerialNumber();
+		if (lastSerial == null) {
+			return 1L;
+		}
+		return lastSerial + 1;
+	}
 }

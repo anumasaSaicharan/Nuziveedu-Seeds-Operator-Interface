@@ -41,6 +41,6 @@ public class PackingOrderDetails {
     @Column(name = "SAP_STATUS", length = 50)
     private String sapStatus;
     
-	@Column(name = "UID", unique = true, nullable = false, length = 12)
+	@Column(name = "UID", unique = true, nullable = false, length = 14)
 	private String uid;
 }
