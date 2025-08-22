@@ -3,6 +3,7 @@ package com.nsl.operatorInterface.repository;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+
 import com.nsl.operatorInterface.entity.UserMaster;
 
 public interface UserMasterRepository extends JpaRepository<UserMaster, Long> {

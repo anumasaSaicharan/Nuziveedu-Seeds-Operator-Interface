@@ -1,7 +1,6 @@
 package com.nsl.operatorInterface.entity;
 
 import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -55,6 +54,11 @@ public class UniqueCodePrintedDataDetails {
 	@Column(name = "SERIAL_NUMBER", unique = true, nullable = false)
 	private Long serialNumber;
 
+//	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "serial_seq")
+//	@SequenceGenerator(name = "serial_seq", sequenceName = "serial_seq", allocationSize = 100)
+//	@Column(name = "SERIAL_NUMBER")
+//	private Long serialNumber;
+
 	@Column(name = "IS_SYNC", nullable = false)
 	private boolean isSync;
 
@@ -74,34 +78,37 @@ public class UniqueCodePrintedDataDetails {
 	private boolean used;
 
 	@Column(name = "USED_DATE", length = 30)
-	private Timestamp usedDate;
+	private LocalDateTime usedDate;
 
 	@Column(name = "PRINTED_ON")
-	private Timestamp printedOn;
+	private LocalDateTime printedOn;
+
+	@Column(name = "SHORT_URL")
+	private String shortUrl;
 
 	@OneToOne
 	@JoinColumn(name = "PRODUCT_ID", columnDefinition = "bigint")
 	private ProductMaster productMaster;
 
-	@Column(name = "PRODUCT_NAME", nullable = false, length = 50)
+	@Column(name = "PRODUCT_NAME", length = 50)
 	private String productName;
 
-	@Column(name = "PACK_SIZE", nullable = false, precision = 10, scale = 2)
+	@Column(name = "PACK_SIZE", precision = 10, scale = 2)
 	private BigDecimal packSize = BigDecimal.ZERO;
 
-	@Column(name = "PACK_UNIT", nullable = false, length = 5)
+	@Column(name = "PACK_UNIT", length = 5)
 	private String packUnit;
 
-	@Column(name = "GTIN_NUMBER", nullable = false, length = 13)
+	@Column(name = "GTIN_NUMBER", length = 13)
 	private String gtinNumber;
 
-	@Column(name = "BATCH_NUMBER", nullable = false, length = 16)
+	@Column(name = "BATCH_NUMBER", length = 16)
 	private String batchNumber;
 
-	@Column(name = "MANUFACTURE_DATE", nullable = false)
+	@Column(name = "MANUFACTURE_DATE")
 	private LocalDate manufactureDate; // ⚠️ Can refactor to LocalDateTime
 
-	@Column(name = "EXPIRY_DATE", nullable = false)
+	@Column(name = "EXPIRY_DATE")
 	private LocalDate expiryDate; // ⚠️ Can refactor to LocalDateTime
 
 	@Column(name = "MRP", precision = 10, scale = 2)
@@ -110,16 +117,16 @@ public class UniqueCodePrintedDataDetails {
 	@Column(name = "UNIT_PRICE", precision = 10, scale = 2)
 	private BigDecimal unitPrice = BigDecimal.ZERO;
 
-	@Column(name = "QTY_SATCHES_TO_PRINT", nullable = false)
+	@Column(name = "QTY_SATCHES_TO_PRINT")
 	private int qtySatchesToPrint;
 
-	@Column(name = "START_TIME", nullable = false)
+	@Column(name = "START_TIME")
 	private LocalDateTime startTime;
 
-	@Column(name = "END_TIME", nullable = false)
+	@Column(name = "END_TIME")
 	private LocalDateTime endTime;
 
-	@Column(name = "NO_OF_SATCHES_PRINTED", nullable = false)
+	@Column(name = "NO_OF_SATCHES_PRINTED")
 	private int noOfSachesPrinted;
 
 	@Column(name = "THREAD_ID")
@@ -136,5 +143,15 @@ public class UniqueCodePrintedDataDetails {
 
 	@Column(name = "USE_SHORT_URL")
 	private String useShortUrl;
+
+	@Column(name = "CODES_YEAR", length = 4)
+	private int codesYear;
+
+	@Column(name = "YEAR_OF_USAGE")
+	private int YearofUsage;
+
+	@OneToOne
+	@JoinColumn(name = "PRINT_JOB_MASTER_ID", columnDefinition = "bigint")
+	private PrintJobMaster printJobMaster;
 
 }

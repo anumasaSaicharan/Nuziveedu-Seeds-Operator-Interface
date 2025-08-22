@@ -2,6 +2,7 @@ package com.nsl.operatorInterface.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import com.nsl.operatorInterface.entity.UserMaster;
 import com.nsl.operatorInterface.repository.UserMasterRepository;
 import com.nsl.operatorInterface.service.WebService;

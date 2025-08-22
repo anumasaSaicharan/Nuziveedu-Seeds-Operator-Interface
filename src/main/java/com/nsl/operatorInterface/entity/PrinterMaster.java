@@ -1,7 +1,12 @@
 package com.nsl.operatorInterface.entity;
 
 import java.time.LocalDateTime;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Data;
 
 @Entity
@@ -37,5 +42,14 @@ public class PrinterMaster {
 
 	@Column(name = "PRINTER_NAME", nullable = false, length = 100)
 	private String printerName;
+
+	@Column(name = "IS_AVAILABLE", nullable = false)
+	private boolean isAvailable;
+
+	@Column(name = "PLANT_NUMBER")
+	private String plantNumber;
+
+	@Column(name = "LINE_NUMBER")
+	private String lineNumber;
 
 }
