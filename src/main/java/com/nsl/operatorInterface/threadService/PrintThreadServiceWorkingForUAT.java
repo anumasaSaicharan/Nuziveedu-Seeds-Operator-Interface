@@ -274,7 +274,7 @@ public class PrintThreadServiceWorkingForUAT implements Runnable{
 										log.info("=UAT=PRINT_JOB_ID=="+printOperatorInterfaceDetails.getId()+"==LOOP_START");
 										String mfgDt = printOperatorInterfaceDetails.getManufactureDate().format(YYMMDD_FORMATTER);
 										String expDt = printOperatorInterfaceDetails.getExpiryDate().format(YYMMDD_FORMATTER);
-										String urlPrfix=appConfig.getProperty("URL_PREFIX")+printOperatorInterfaceDetails.getGtinNumber()+"/10/"+printOperatorInterfaceDetails.getBatchNumber()+"/21/";
+										String urlPrfix=appConfig.getProperty("URL_PREFIX")+"/10/"+printOperatorInterfaceDetails.getBatchNumber()+"/21/";
 										for(UniqueCodePrintedDataDetails qrUid:sendBufferList)
 										{
 											Long cnt = getPrintedCodesCountByUId(session,qrUid.getUidCode());
@@ -304,7 +304,7 @@ public class PrintThreadServiceWorkingForUAT implements Runnable{
 													qrUid.setProductName(printOperatorInterfaceDetails.getProductName());
 													qrUid.setPackSize(printOperatorInterfaceDetails.getPackSize());
 													qrUid.setPackUnit(printOperatorInterfaceDetails.getPackUnit());
-													qrUid.setGtinNumber(printOperatorInterfaceDetails.getGtinNumber());
+//													qrUid.setGtinNumber(printOperatorInterfaceDetails.getGtinNumber());
 													qrUid.setBatchNumber(printOperatorInterfaceDetails.getBatchNumber());
 													qrUid.setManufactureDate(printOperatorInterfaceDetails.getManufactureDate());
 													qrUid.setExpiryDate(printOperatorInterfaceDetails.getExpiryDate());
@@ -363,9 +363,7 @@ public class PrintThreadServiceWorkingForUAT implements Runnable{
 								                
 								                String updateQuery = " update UNIQUE_CODE_PRINTED_DATA_DETAILS set USED=1 where UID_CODE='"+qrUid.getUidCode()+"' and USED=0 ";
 												executeSqlQuery(session, updateQuery);
-												session.flush();
 												log.info("=UAT=PRINT_JOB_ID==>"+printOperatorInterfaceDetails.getId()+"==AFTER_USED_UPDATED==");
-								                
 												break;
 											}
 										}
@@ -513,10 +511,15 @@ public class PrintThreadServiceWorkingForUAT implements Runnable{
 			}
 			
 			public void executeSqlQuery(Session session, String sql) {
+			    org.hibernate.Transaction tx = null;
 			    try {
+			        tx = session.beginTransaction();
 			        session.createNativeQuery(sql).executeUpdate();
+			        tx.commit();
 			    } catch (HibernateException e) {
+			        if (tx != null) tx.rollback();
 			        log.error("Error executing SQL: " + sql, e);
 			    }
 			}
+
 	}

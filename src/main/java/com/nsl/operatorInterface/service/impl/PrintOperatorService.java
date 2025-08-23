@@ -71,8 +71,7 @@ public class PrintOperatorService {
 		if ("LIVE".equalsIgnoreCase(appConfig.getProperty("SERVER_TYPE"))) {
 			return saveAndPrintCodeDetailsForProd(request, jsonData);
 		} else {
-//			return savePrintCodeDetailsForUAT(request, jsonData);
-			return new ApiResponse();
+			return savePrintCodeDetails_UAT(request, jsonData);
 		}
 	}
 
@@ -230,27 +229,29 @@ public class PrintOperatorService {
 	public ApiResponse savePrintCodeDetails_UAT(HttpServletRequest request, @Valid PrintCodesRequest printDto) {
 		ApiResponse resp = new ApiResponse();
 		try {
+			log.info("Phase======================================================1");
 			synchronized (this) {
 				log.info("=UAT=SYNCHRONIZED_BLOCK==" + printDto);
 				int year = Calendar.getInstance().get(Calendar.YEAR);
 				Long unusedCodes = uniqueCodePrintedDataDetailsRepository.getUnUsedCodesCount(printDto.getProductName(),printDto.getCrop(), printDto.getVariety());
 				log.info("Unused Codes Available: {}", unusedCodes);
+				log.info("Phase======================================================2");
 
 				// Inventory validation
 				if (unusedCodes != null && unusedCodes > 0 && printDto.getQtySatchesToPrint() > unusedCodes) {
 					String msg = "Inventory Exceeded. Available Codes: " + unusedCodes;
 					return new ApiResponse(400, msg, null);
 				}
-				
-				/// Checking company details
-				CompanyDetails comp = companyDetailsRepository.findByCompanyId(printDto.getCompanyCode());
-				if (comp == null) {
-					resp.setMessage("Invalid company code.");
-					resp.setStatusCode(400);
-					return resp;
-				}
+				log.info("Phase======================================================3");
 
-				PrintJobMaster print = null;
+//				/// Checking company details
+//				CompanyDetails comp = companyDetailsRepository.findByCompanyId(printDto.getCompanyCode());
+//				if (comp == null) {
+//					resp.setMessage("Invalid company code.");
+//					resp.setStatusCode(400);
+//					return resp;
+//				}
+				PrintJobMaster print=null;
 				if (printDto.getPrintJobId() == 0) {
 					print = new PrintJobMaster();
 					print.setActive(true);
@@ -261,15 +262,17 @@ public class PrintOperatorService {
 				} else {
 					print = printJobMasterRepository.findById(printDto.getPrintJobId()).orElseThrow(() -> new RuntimeException("Print Job not found with id: " + printDto.getPrintJobId()));
 				}
-				ProductMaster product = productMasterRepository.findByProductNameAndPackSize(printDto.getProductName(),printDto.getPackSize());
+//				ProductMaster product = productMasterRepository.findByProductNameAndPackSize(printDto.getProductName(),printDto.getPackSize());
+				log.info("Phase======================================================4");
 
+				print.setVariety(printDto.getVariety());
 				print.setProductName(printDto.getProductName());
 				print.setPackSize(printDto.getPackSize());
 				print.setPackUnit(printDto.getPackUnit());
 				print.setManufactureDate(printDto.getManufactureDate());
 				print.setExpiryDate(printDto.getExpiryDate());
 				print.setMrp(printDto.getMrp());
-				print.setProductMaster(product);
+//				print.setProductMaster(product);
 				print.setBatchNumber(printDto.getBatchNumber());
 				print.setStartTime(LocalDateTime.now());
 				print.setEndTime(LocalDateTime.now());
@@ -282,15 +285,22 @@ public class PrintOperatorService {
 
 //				print.setProductMaster(printDto.getProduct());
 //				print.setGtinNumber(printDto.getGtinNumber());
-//				print.setUseShortUrl(printDto.getUseShortUrl());
-				
+				print.setUseShortUrl(printDto.getUseShortUrl());
+				log.info("Phase======================================================5");
+
 				log.info("==printDto.getPrintJobId()==BEFORE>" + printDto.getPrintJobId());
 	            List<UniqueCodePrintedDataDetails> codesList = uniqueCodePrintedDataDetailsRepository.fetchUnusedCodes(printDto.getQtySatchesToPrint(), year);
+				log.info("Phase======================================================6");
 
 	            if (codesList != null && !codesList.isEmpty()) {
+					log.info("Phase======================================================6.15====>"+codesList.size());
+
+					log.info("Phase======================================================6.25");
 					if (printDto.getQtySatchesToPrint() <= codesList.size()) {
+						log.info("Phase======================================================6.50");
 						printJobMasterRepository.save(print);
 					} else {
+						log.info("Phase======================================================6.75");
 						resp.setMessage("Not enough codes available to print.");
 						resp.setStatusCode(404);
 						return resp;
@@ -301,6 +311,7 @@ public class PrintOperatorService {
 					resp.setStatusCode(404);
 					return resp;
 				}
+				log.info("Phase======================================================7");
 
 				log.info("UAT_socket===>" + socket);
 				boolean prntStFlag = true;
@@ -310,11 +321,15 @@ public class PrintOperatorService {
 					if (socket != null && socket.isConnected()) {
 						concFlag = true;
 						log.info("UAT_socket.isConnected()==>" + socket.isConnected());
+						log.info("Phase======================================================8");
+
 						// Checking printerStatus
 						while (!prntStFlag) {
 							prntStFlag = getNetWorkPrinterStatus(socket, print.getSelectedTemplateName());
 						}
 					} else {
+						log.info("Phase======================================================9");
+
 						socket = conectToNetWorkPrinter();
 						Thread.sleep(2000);
 						if (socket != null && socket.isConnected()) {
@@ -324,6 +339,8 @@ public class PrintOperatorService {
 						}
 					}
 				}
+				log.info("Phase======================================================10");
+
 				/*
 				 * if(socket==null) { resp.setResponse(appConfig.getProperty("ERROR_MESSAGE"));
 				 * resp.setMessage(appConfig.getProperty("ERROR_MESSAGE"));
@@ -335,6 +352,7 @@ public class PrintOperatorService {
 				PrintedCodesHistory codesHistory = new PrintedCodesHistory();
 				DuplicatePrintCodes duplicatecodes = new DuplicatePrintCodes();
 				PrintedCodes pc = new PrintedCodes();
+				log.info("Phase======================================================11");
 
 				log.info("UAT_prntStFlag==>" + prntStFlag);
 				if (prntStFlag) {
@@ -345,6 +363,7 @@ public class PrintOperatorService {
 					log.info("An unexpected error occurred while processing the thread request.");
 					return resp;
 				}
+				log.info("Phase======================================================12");
 
 				JSONObject jsonResponse = new JSONObject();
 	   			Object Count = uniqueCodePrintedDataDetailsRepository.getCountByPrintJobMasterId(+print.getId());

@@ -54,11 +54,6 @@ public class UniqueCodePrintedDataDetails {
 	@Column(name = "SERIAL_NUMBER", unique = true, nullable = false)
 	private Long serialNumber;
 
-//	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "serial_seq")
-//	@SequenceGenerator(name = "serial_seq", sequenceName = "serial_seq", allocationSize = 100)
-//	@Column(name = "SERIAL_NUMBER")
-//	private Long serialNumber;
-
 	@Column(name = "IS_SYNC", nullable = false)
 	private boolean isSync;
 
@@ -106,10 +101,10 @@ public class UniqueCodePrintedDataDetails {
 	private String batchNumber;
 
 	@Column(name = "MANUFACTURE_DATE")
-	private LocalDate manufactureDate; // ⚠️ Can refactor to LocalDateTime
+	private LocalDate manufactureDate;
 
 	@Column(name = "EXPIRY_DATE")
-	private LocalDate expiryDate; // ⚠️ Can refactor to LocalDateTime
+	private LocalDate expiryDate;
 
 	@Column(name = "MRP", precision = 10, scale = 2)
 	private BigDecimal mrp = BigDecimal.ZERO;

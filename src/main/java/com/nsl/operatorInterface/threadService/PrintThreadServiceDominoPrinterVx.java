@@ -350,7 +350,7 @@ public class PrintThreadServiceDominoPrinterVx implements Runnable{
 										log.info("=4=PRINT_JOB_ID=="+printOperatorInterfaceDetails.getId()+"==LOOP_START");
 										String mfgDt = printOperatorInterfaceDetails.getManufactureDate().format(YYMMDD_FORMATTER);
 										String expDt = printOperatorInterfaceDetails.getExpiryDate().format(YYMMDD_FORMATTER);
-										String urlPrfix=appConfig.getProperty("URL_PREFIX")+printOperatorInterfaceDetails.getGtinNumber()+"/10/"+printOperatorInterfaceDetails.getBatchNumber()+"/21/";
+										String urlPrfix=appConfig.getProperty("URL_PREFIX")+"/10/"+printOperatorInterfaceDetails.getBatchNumber()+"/21/";
 										for(UniqueCodePrintedDataDetails qrUid:sendBufferList)
 										{
 											Long cnt = getPrintedCodesCountByUId(session,qrUid.getUidCode());
@@ -381,7 +381,7 @@ public class PrintThreadServiceDominoPrinterVx implements Runnable{
 													qrUid.setProductName(printOperatorInterfaceDetails.getProductName());
 													qrUid.setPackSize(printOperatorInterfaceDetails.getPackSize());
 													qrUid.setPackUnit(printOperatorInterfaceDetails.getPackUnit());
-													qrUid.setGtinNumber(printOperatorInterfaceDetails.getGtinNumber());
+//													qrUid.setGtinNumber(printOperatorInterfaceDetails.getGtinNumber());
 													qrUid.setBatchNumber(printOperatorInterfaceDetails.getBatchNumber());
 													qrUid.setManufactureDate(printOperatorInterfaceDetails.getManufactureDate());
 													qrUid.setExpiryDate(printOperatorInterfaceDetails.getExpiryDate());

@@ -41,14 +41,17 @@ public class PrintJobMaster {
 	@Column(name = "PRODUCT_NAME", nullable = false, length = 50)
 	private String productName;
 
+	@Column(name = "VARIETY", nullable = false, length = 50)
+	private String variety;
+
 	@Column(name = "PACK_SIZE", nullable = false, precision = 10, scale = 2)
 	private BigDecimal packSize = BigDecimal.ZERO;
 
 	@Column(name = "PACK_UNIT", nullable = false, length = 5)
 	private String packUnit;
 
-	@Column(name = "GTIN_NUMBER", nullable = false, length = 13)
-	private String gtinNumber;
+//	@Column(name = "GTIN_NUMBER", nullable = false, length = 13)
+//	private String gtinNumber;
 
 	@Column(name = "BATCH_NUMBER", nullable = false, length = 16)
 	private String batchNumber;
