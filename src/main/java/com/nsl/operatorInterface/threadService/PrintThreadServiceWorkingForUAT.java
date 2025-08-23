@@ -245,7 +245,7 @@ public class PrintThreadServiceWorkingForUAT implements Runnable{
 							int balPrints = noOfPrints;
 							int sentCount = 0;
 							if (noOfPrints > 20)
-								sentCount = 20;
+								sentCount = 200;
 							else
 								sentCount = noOfPrints;
 

@@ -456,7 +456,6 @@ public class PrintThreadServiceDominoPrinter implements Runnable {
 								                
 								                String updateQuery = " update UNIQUE_CODE_PRINTED_DATA_DETAILS set USED=1 where UID_CODE='"+qrUid.getUidCode()+"' and USED=0 ";
 												executeSqlQuery(session, updateQuery);
-												session.flush();
 												log.info("==PRINT_JOB_ID==>"+printOperatorInterfaceDetails.getId()+"==AFTER_USED_UPDATED==");
 								                
 												break;
@@ -818,9 +817,13 @@ public class PrintThreadServiceDominoPrinter implements Runnable {
 			}
 
 			public void executeSqlQuery(Session session, String sql) {
+			    org.hibernate.Transaction tx = null;
 			    try {
+			        tx = session.beginTransaction();
 			        session.createNativeQuery(sql).executeUpdate();
+			        tx.commit();
 			    } catch (HibernateException e) {
+			        if (tx != null) tx.rollback();
 			        log.error("Error executing SQL: " + sql, e);
 			    }
 			}

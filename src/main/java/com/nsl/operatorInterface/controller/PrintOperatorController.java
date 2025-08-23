@@ -40,4 +40,31 @@ public class PrintOperatorController {
         // Return response
         return new ResponseEntity<>(resp, HttpStatus.valueOf(resp.getStatusCode()));
     }
+    
+    @PostMapping("stopPrinting")
+    public ResponseEntity<ApiResponse> stopPrinting(HttpServletRequest request, @RequestBody String jsonData) {
+        log.info("Inside /stopPrinting");
+
+        ApiResponse resp = printOperatorService.stopPrinting(request, jsonData);
+
+        // Log request/response
+        requestResponseLogService.saveRequestResponse("/stopPrinting",jsonData.toString(),resp.getResponse() != null ? resp.getResponse().toString() : "",LocalDateTime.now(),LocalDateTime.now(),resp.getMessage());
+
+        // Return response
+        return new ResponseEntity<>(resp, HttpStatus.valueOf(resp.getStatusCode()));
+    }
+    
+    
+    @PostMapping("getPrintCodeStatus")
+    public ResponseEntity<ApiResponse> getPrintCodeStatus(HttpServletRequest request, @RequestBody String jsonData) {
+        log.info("Inside /getPrintCodeStatus");
+
+        ApiResponse resp = printOperatorService.getPrintCodeStatus(request, jsonData);
+
+        // Log request/response
+        requestResponseLogService.saveRequestResponse("/getPrintCodeStatus",jsonData.toString(),resp.getResponse() != null ? resp.getResponse().toString() : "",LocalDateTime.now(),LocalDateTime.now(),resp.getMessage());
+
+        // Return response
+        return new ResponseEntity<>(resp, HttpStatus.valueOf(resp.getStatusCode()));
+    }
 }

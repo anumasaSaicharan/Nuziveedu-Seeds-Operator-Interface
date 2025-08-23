@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.json.JSONObject;
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
+
 import com.nsl.operatorInterface.dto.ApiResponse;
 import com.nsl.operatorInterface.entity.CompanyDetails;
 import com.nsl.operatorInterface.entity.DuplicatePrintCodes;
@@ -65,7 +67,8 @@ public class PrintOperatorService {
 	@Autowired
 	@Qualifier("hibernateDao")
 	protected HibernateDao hibernateDao;
-	
+	private static boolean forLoopFlag =true;
+
 	public ApiResponse saveAndPrintCodeDetails(HttpServletRequest request, @Valid PrintCodesRequest jsonData) {
 		log.info(">> savePrintCodeDetails :: SERVER_TYPE => {}", appConfig.getProperty("SERVER_TYPE"));
 		if ("LIVE".equalsIgnoreCase(appConfig.getProperty("SERVER_TYPE"))) {
@@ -849,5 +852,169 @@ public class PrintOperatorService {
 		 */
 		return "Success";
 	}
+
+	@SuppressWarnings({ "unused" })
+	public ApiResponse stopPrinting(HttpServletRequest request, String jsonData) {
+		ApiResponse resp = new ApiResponse();
+		try {
+			JSONObject mainData = new JSONObject(jsonData);
+			long id = mainData.getLong("id");
+			log.info("PRINTJOB_ID=stopPrinting=>" + id);
+			Optional<PrintJobMaster> print = printJobMasterRepository.findById(id);
+
+			if (socket != null) {
+				log.info("== SOCKET CONNECTION NOT AVAILABLE ==");
+				setPrinterOffline();
+				// socket.close();
+				// socket=null;
+			}
+
+			forLoopFlag = false;
+			resp.setMessage("Success");
+			resp.setStatusCode(200);
+		} catch (Exception e) {
+			resp.setMessage("An unexpected error occurred while processing the request.");
+			resp.setStatusCode(500);
+			log.info("" + e.getStackTrace(), e);
+		}
+		return resp;
+	}
+
+	public String setPrinterOffline() {
+		String resp = "";
+		try {
+//			if ("VIDEOJET_TP".equalsIgnoreCase(appConfig.getProperty("PRINTER_TYPE"))) {
+//				String offlineCmd = "SST|4|\r";
+//				OutputStream output = null;
+//				PrintThreadServiceWorking thrd = new PrintThreadServiceWorking();
+//				List<PrintedDataDetails> emptyList = new ArrayList<>();
+//				thrd.setPrintedDataDetailsList(emptyList);
+//				thrd.setStopThreadVariable(true);
+//
+//				PrintThreadServiceWorking.setStopThreadVariable(true);
+//				PrintThreadServiceWorking.setWhileLoopFlag(1);
+//				if (socket != null) {
+//					try {
+//						BufferedReader reader = null;
+//						output = socket.getOutputStream();
+//						reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "utf-8"));
+//						output.write(offlineCmd.getBytes());
+//						String response = reader.readLine();
+//						resp = response.toString();
+//					} catch (Exception e) {
+//						log.info("Exec==>" + e.getStackTrace(), e);
+//						resp = "ERROR";
+//					}
+//				}
+//			} else if ("VIDEOJET_LP".equalsIgnoreCase(appConfig.getProperty("PRINTER_TYPE"))) {
+//				String offlineCmd = "Stop;\r\n";
+//				OutputStream output = null;
+//				PrintThreadServiceVideoJetLaserPrinter thrd = new PrintThreadServiceVideoJetLaserPrinter();
+//				List<PrintedDataDetails> emptyList = new ArrayList<>();
+//				thrd.setPrintedDataDetailsList(emptyList);
+//				thrd.setStopThreadVariable(true);
+//
+//				PrintThreadServiceVideoJetLaserPrinter.setStopThreadVariable(true);
+//				PrintThreadServiceVideoJetLaserPrinter.setWhileLoopFlag(1);
+//				if (socket != null) {
+//					try {
+//						BufferedReader reader = null;
+//						output = socket.getOutputStream();
+//						reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "utf-8"));
+//						output.write(offlineCmd.getBytes());
+//						String response = reader.readLine();
+//						resp = response.toString();
+//					} catch (Exception e) {
+//						log.info("Exec==>" + e.getStackTrace(), e);
+//						resp = "ERROR";
+//					}
+//				}
+//			} else 
+//				
+				
+				if ("DOMINO_TPO_V".equalsIgnoreCase(appConfig.getProperty("PRINTER_TYPE"))) {
+				String offlineCmd = SOH + "PausePrint" + ETB;
+				;
+				OutputStream output = null;
+				PrintThreadServiceDominoPrinter thrd = new PrintThreadServiceDominoPrinter();
+				List<UniqueCodePrintedDataDetails> emptyList = new ArrayList<>();
+				thrd.setPrintedDataDetailsList(emptyList);
+				thrd.setStopThreadVariable(true);
+
+				PrintThreadServiceDominoPrinter.setStopThreadVariable(true);
+				PrintThreadServiceDominoPrinter.setWhileLoopFlag(1);
+				if (socket != null) {
+					try {
+						BufferedReader reader = null;
+						output = socket.getOutputStream();
+						reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "utf-8"));
+						output.write(offlineCmd.getBytes());
+						String response = reader.readLine();
+						resp = response.toString();
+					} catch (Exception e) {
+						log.info("Exec==>" + e.getStackTrace(), e);
+						resp = "ERROR";
+					}
+				}
+			} else if ("DOMINO_TPO_VX".equalsIgnoreCase(appConfig.getProperty("PRINTER_TYPE"))) {
+				log.info("ENTER TO SET PRINTER OFFLINE===========>");
+				String offlineCmd = "BUFFERCLEAR\r\n";
+				OutputStream output = null;
+				PrintThreadServiceDominoPrinterVx thrd = new PrintThreadServiceDominoPrinterVx();
+				List<UniqueCodePrintedDataDetails> emptyList = new ArrayList<>();
+				thrd.setPrintedDataDetailsList(emptyList);
+				thrd.setStopThreadVariable(true);
+				PrintThreadServiceDominoPrinterVx.setStopThreadVariable(true);
+				PrintThreadServiceDominoPrinterVx.setWhileLoopFlag(1);
+				log.info("=== WHILE LOOP FLAG ===::" + PrintThreadServiceDominoPrinterVx.getWhileLoopFlag());
+				/*
+				 * if(socket!=null) { try { BufferedReader reader= null; output =
+				 * socket.getOutputStream(); reader = new BufferedReader(new
+				 * InputStreamReader(socket.getInputStream(),"utf-8"));
+				 * output.write(offlineCmd.getBytes()); String response = reader.readLine();
+				 * resp= response.toString(); } catch(Exception e) {
+				 * log.info("Exec==>"+e.getStackTrace(),e); resp="ERROR"; } }
+				 */
+			}
+			
+//			else if ("MARKEM_IMAGE".equalsIgnoreCase(appConfig.getProperty("PRINTER_TYPE"))) {
+//				log.info("ENTER TO SET PRINTER OFFLINE===========>");
+//				PrintThreadServiceMIPrinter thrd = new PrintThreadServiceMIPrinter();
+//				List<PrintedDataDetails> emptyList = new ArrayList<>();
+//				thrd.setPrintedDataDetailsList(emptyList);
+//				thrd.setStopThreadVariable(true);
+//				PrintThreadServiceMIPrinter.setStopThreadVariable(true);
+//				PrintThreadServiceMIPrinter.setWhileLoopFlag(1);
+//				log.info("Markem Machine Stopped===========>");
+//
+//				log.info("=== WHILE LOOP FLAG ===::" + PrintThreadServiceMIPrinter.getWhileLoopFlag());
+//			}
+		} catch (Exception e) {
+			log.info("Final Exec==>" + e.getStackTrace(), e);
+		}
+		return resp;
+	}
+
+	public ApiResponse getPrintCodeStatus(HttpServletRequest request, String reqObj) {
+			ApiResponse responseDTO = new ApiResponse();
+			try {
+				JSONObject mainData = new JSONObject(reqObj);
+				long id = mainData.getLong("id");
+				Object Count = uniqueCodePrintedDataDetailsRepository.getCountByPrintJobMasterId(id);
+				Optional<PrintJobMaster> pj = printJobMasterRepository.findById(id);
+
+				// int Count = getBatchCountFromPrinter();
+				log.info("Current Batch Printed Count ::::" + Count);
+				responseDTO.setResponse(Count);
+//				responseDTO.setDraw(pj != null ? pj.getStatus() : "NA");
+				responseDTO.setMessage("Success");
+				responseDTO.setStatusCode(200);
+			} catch (Exception e) {
+				responseDTO.setMessage("An unexpected error occurred while processing the request.");
+				responseDTO.setStatusCode(500);
+				log.info("" + e.getStackTrace(), e);
+			}
+			return responseDTO;
+		}	
 
 }
