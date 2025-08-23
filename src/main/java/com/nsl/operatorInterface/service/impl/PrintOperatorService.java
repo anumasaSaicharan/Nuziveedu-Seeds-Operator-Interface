@@ -83,10 +83,12 @@ public class PrintOperatorService {
 		ApiResponse resp = new ApiResponse();
 		try {
 			synchronized (this) {
-				log.info("SYNCHRONIZED_BLOCK {}", printDto);
+				log.info("PROD=======>SYNCHRONIZED_BLOCK {}", printDto);
 
 				int year = Calendar.getInstance().get(Calendar.YEAR);
-				Long unusedCodes = uniqueCodePrintedDataDetailsRepository.getUnUsedCodesCount(printDto.getProductName(),printDto.getCrop(), printDto.getVariety());
+//				Long unusedCodes = uniqueCodePrintedDataDetailsRepository.getUnUsedCodesCount(printDto.getProductName(),printDto.getCrop(), printDto.getVariety());
+				Long unusedCodes = uniqueCodePrintedDataDetailsRepository.getUnUsedCodesCount(printDto.getProductionOrderNo(),printDto.getVariety());
+
 				log.info("Unused Codes Available: {}", unusedCodes);
 
 				// Inventory validation
@@ -138,7 +140,7 @@ public class PrintOperatorService {
 //				print.setGtinNumber(printDto.getGtinNumber());
 
 				log.info("==printDto.getPrintJobId()==BEFORE>" + printDto.getPrintJobId());
-	            List<UniqueCodePrintedDataDetails> codesList = uniqueCodePrintedDataDetailsRepository.fetchUnusedCodes(printDto.getQtySatchesToPrint(), year);
+	            List<UniqueCodePrintedDataDetails> codesList = uniqueCodePrintedDataDetailsRepository.fetchUnusedCodes(printDto.getQtySatchesToPrint(), year,printDto.getProductionOrderNo(),printDto.getVariety());
 
 				if (codesList != null && !codesList.isEmpty()) {
 					if (printDto.getQtySatchesToPrint() <= codesList.size()) {
@@ -236,7 +238,7 @@ public class PrintOperatorService {
 			synchronized (this) {
 				log.info("=UAT=SYNCHRONIZED_BLOCK==" + printDto);
 				int year = Calendar.getInstance().get(Calendar.YEAR);
-				Long unusedCodes = uniqueCodePrintedDataDetailsRepository.getUnUsedCodesCount(printDto.getProductName(),printDto.getCrop(), printDto.getVariety());
+				Long unusedCodes = uniqueCodePrintedDataDetailsRepository.getUnUsedCodesCount(printDto.getProductionOrderNo(),printDto.getVariety());
 				log.info("Unused Codes Available: {}", unusedCodes);
 				log.info("Phase======================================================2");
 
@@ -292,7 +294,9 @@ public class PrintOperatorService {
 				log.info("Phase======================================================5");
 
 				log.info("==printDto.getPrintJobId()==BEFORE>" + printDto.getPrintJobId());
-	            List<UniqueCodePrintedDataDetails> codesList = uniqueCodePrintedDataDetailsRepository.fetchUnusedCodes(printDto.getQtySatchesToPrint(), year);
+//	            List<UniqueCodePrintedDataDetails> codesList = uniqueCodePrintedDataDetailsRepository.fetchUnusedCodes(printDto.getQtySatchesToPrint(), year);
+	            List<UniqueCodePrintedDataDetails> codesList = uniqueCodePrintedDataDetailsRepository.fetchUnusedCodes(printDto.getQtySatchesToPrint(), year,printDto.getProductionOrderNo(),printDto.getVariety());
+
 				log.info("Phase======================================================6");
 
 	            if (codesList != null && !codesList.isEmpty()) {
