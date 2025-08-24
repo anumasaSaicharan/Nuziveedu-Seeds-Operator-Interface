@@ -34,7 +34,7 @@ public class UniqueCodePrintedDataDetails {
 	@Column(name = "ACTIVE", nullable = false)
 	private boolean active;
 
-	@Column(name = "PRODUCTION_ORDER_NO", nullable = false, length = 50)
+	@Column(name = "PRODUCTION_ORDER_NO", length = 50)
 	private String productionOrderNo;
 
 	@Column(name = "CROP_NAME", columnDefinition = "NVARCHAR(50)")

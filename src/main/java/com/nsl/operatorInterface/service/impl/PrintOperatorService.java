@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
@@ -43,6 +44,7 @@ import com.nsl.operatorInterface.threadService.PrintThreadServiceDominoPrinter;
 import com.nsl.operatorInterface.threadService.PrintThreadServiceDominoPrinterVx;
 import com.nsl.operatorInterface.threadService.PrintThreadServiceWorkingForUAT;
 import com.nsl.operatorInterface.utility.HibernateDao;
+import com.nsl.operatorInterface.utility.UIDGenerator;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -68,6 +70,12 @@ public class PrintOperatorService {
 	@Qualifier("hibernateDao")
 	protected HibernateDao hibernateDao;
 	private static boolean forLoopFlag =true;
+	
+    @Value("${plant.code}")
+    private String plantCode;
+    
+    @Value("${line.code}")
+    private String lineNumber;
 
 	public ApiResponse saveAndPrintCodeDetails(HttpServletRequest request, @Valid PrintCodesRequest jsonData) {
 		log.info(">> savePrintCodeDetails :: SERVER_TYPE => {}", appConfig.getProperty("SERVER_TYPE"));
@@ -1019,6 +1027,60 @@ public class PrintOperatorService {
 				log.info("" + e.getStackTrace(), e);
 			}
 			return responseDTO;
-		}	
+		}
 
-}
+		public ApiResponse generateUniqueCodes(HttpServletRequest request, String jsonData) {
+			try {
+				JSONObject json = new JSONObject(jsonData);
+				log.info("quantity===================0=========>");
+
+				int quantity = json.getInt("quantity");
+				log.info("quantity============================>"+quantity);
+				
+				if (quantity > 50000) {
+				    return new ApiResponse(400,"Request exceeds limit. Maximum 50,000 codes can be generated at a time",null);
+				}
+				log.info("quantity======================2======>"+quantity);
+
+				Long lastSerial = uniqueCodePrintedDataDetailsRepository.findMaxSerialNumber();
+				if (lastSerial == null) {
+					lastSerial = 1000000000L - 1;
+				}
+				log.info("quantity==============3==============>"+quantity);
+
+//				String plantCode = appConfig.getProperty("PLANT_CODE");
+//				String lineNumber = appConfig.getProperty("LINE_NUMBER");
+				log.info("quantity================4===========>"+quantity);
+
+				List<UniqueCodePrintedDataDetails> batch = new ArrayList<>();
+
+				for (int i = 1; i <= quantity; i++) {
+					UniqueCodePrintedDataDetails uniqueCodePrintDetails = new UniqueCodePrintedDataDetails();
+
+					String uid = UIDGenerator.generateUID(plantCode);
+					uniqueCodePrintDetails.setUidCode(uid);
+					uniqueCodePrintDetails.setSerialNumber(lastSerial + i);
+					uniqueCodePrintDetails.setCreatedOn(LocalDateTime.now());
+					uniqueCodePrintDetails.setActive(true);
+					uniqueCodePrintDetails.setCodesYear(LocalDateTime.now().getYear());
+					uniqueCodePrintDetails.setLineNumber(lineNumber);
+					batch.add(uniqueCodePrintDetails);
+					log.info("quantity=======5====================>"+quantity);
+
+					if (batch.size() == 1000) {
+						uniqueCodePrintedDataDetailsRepository.saveAll(batch);
+						batch.clear();
+					}
+				}
+				if (!batch.isEmpty()) {
+					uniqueCodePrintedDataDetailsRepository.saveAll(batch);
+				}
+				log.info("quantity==========6=================>"+quantity);
+				return new ApiResponse(200, "Unique codes generated successfully",quantity + " codes generated for Line : " + lineNumber);
+			} catch (Exception e) {
+				log.error("Exception in generateUniqueCodes:", e);
+				return new ApiResponse(500, "Error occurred while generating unique codes", e.getMessage());
+			}
+		}
+
+	}

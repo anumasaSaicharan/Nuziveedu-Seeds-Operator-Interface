@@ -34,20 +34,4 @@ public class PrintedCodes {
 	@Column(name = "PRINT_JOB_ID")
 	private String printJobId;
 
-	public String getUidCode() {
-		return uidCode;
-	}
-
-	public void setUidCode(String uidCode) {
-		this.uidCode = uidCode;
-	}
-
-	public String getPrintJobId() {
-		return printJobId;
-	}
-
-	public void setPrintJobId(String printJobId) {
-		this.printJobId = printJobId;
-	}
-
 }
