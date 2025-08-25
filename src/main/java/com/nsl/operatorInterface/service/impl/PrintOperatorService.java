@@ -10,6 +10,7 @@ import java.net.Socket;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -1083,4 +1084,18 @@ public class PrintOperatorService {
 			}
 		}
 
+		public ApiResponse getUsedAndUnusedCodesCount(HttpServletRequest request) {
+			try {
+				Long usedCount = uniqueCodePrintedDataDetailsRepository.getAllUsedCountTillDate();
+				Long unusedCount = uniqueCodePrintedDataDetailsRepository.getAllUnusedCountTillDate();
+
+				Map<String, Long> responseMap = new HashMap<>();
+				responseMap.put("usedCodesCount", usedCount != null ? usedCount : 0L);
+				responseMap.put("unusedCodesCount", unusedCount != null ? unusedCount : 0L);
+				return new ApiResponse(200, "Counts fetched successfully", responseMap);
+			} catch (Exception e) {
+				e.printStackTrace();
+				return new ApiResponse(500, "Error fetching used/unused codes count: " + e.getMessage(), null);
+			}
+		}
 	}

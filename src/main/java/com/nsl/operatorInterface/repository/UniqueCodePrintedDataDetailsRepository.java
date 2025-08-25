@@ -22,5 +22,11 @@ public interface UniqueCodePrintedDataDetailsRepository extends JpaRepository<Un
 	Long getCountByPrintJobMasterId(@Param("printJobMasterId") Long printJobMasterId);
 
 	@Query("SELECT DISTINCT u.productionOrderNo, u.variety FROM UniqueCodePrintedDataDetails u WHERE u.active = true AND u.used = false")
-		List<Object[]> findDistinctPoVarietyPairs();
-}
+	List<Object[]> findDistinctPoVarietyPairs();
+
+	@Query("SELECT COUNT(u) FROM UniqueCodePrintedDataDetails u WHERE u.active = true AND u.used = false")
+	Long getAllUnusedCountTillDate();
+
+	@Query("SELECT COUNT(u) FROM UniqueCodePrintedDataDetails u WHERE u.active = true AND u.used = true")
+	Long getAllUsedCountTillDate();
+	}

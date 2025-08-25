@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -59,6 +60,14 @@ public class PrintOperatorController {
         log.info("Inside /generateUniqueCodes");
         ApiResponse resp = printOperatorService.generateUniqueCodes(request, jsonData);
         requestResponseLogService.saveRequestResponse("/generateUniqueCodes",jsonData.toString(),resp.getResponse() != null ? resp.getResponse().toString() : "",LocalDateTime.now(),LocalDateTime.now(),resp.getMessage());
+        return new ResponseEntity<>(resp, HttpStatus.valueOf(resp.getStatusCode()));
+    }
+    
+    @GetMapping("get-used-and-unused-codes-count")
+    public ResponseEntity<ApiResponse> getUsedAndUnusedCodesCount(HttpServletRequest request) {
+        log.info("Inside /getUsedAndUnusedCodesCount");
+        ApiResponse resp = printOperatorService.getUsedAndUnusedCodesCount(request);
+        requestResponseLogService.saveRequestResponse("/getUsedAndUnusedCodesCount","",resp.getResponse() != null ? resp.getResponse().toString() : "",LocalDateTime.now(),LocalDateTime.now(),resp.getMessage());
         return new ResponseEntity<>(resp, HttpStatus.valueOf(resp.getStatusCode()));
     }
     
