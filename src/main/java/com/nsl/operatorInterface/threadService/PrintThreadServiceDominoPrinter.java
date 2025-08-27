@@ -80,7 +80,7 @@ public class PrintThreadServiceDominoPrinter implements Runnable {
 	private DuplicatePrintCodesRepository duplicatePrintCodesRepository;
 	private int currentYear;
 	private QRCodeService qrCodeService;
-	private static boolean stopThreadVariable = false;
+	private static volatile boolean stopThreadVariable = false;
 	private static int whileLoopFlag = 0;
 	private static final DateTimeFormatter DD_MMM_YYYY_FORMAT = DateTimeFormatter.ofPattern("dd.MMM.yyyy");
 	public static final DateTimeFormatter YYMMDD_FORMATTER = DateTimeFormatter.ofPattern("yyMMdd");
@@ -375,9 +375,9 @@ public class PrintThreadServiceDominoPrinter implements Runnable {
 													printedCodesRepository.save(printedCodes);
 													
 													qrUid.setPrintJobMaster(printOperatorInterfaceDetails);
-													qrUid.setProductMaster(printOperatorInterfaceDetails.getProductMaster());
+//													qrUid.setProductMaster(printOperatorInterfaceDetails.getProductMaster());
 													qrUid.setActive(true);
-													qrUid.setProductName(printOperatorInterfaceDetails.getProductName());
+//													qrUid.setProductName(printOperatorInterfaceDetails.getProductName());
 													qrUid.setPackSize(printOperatorInterfaceDetails.getPackSize());
 													qrUid.setPackUnit(printOperatorInterfaceDetails.getPackUnit());
 //													qrUid.setGtinNumber(printOperatorInterfaceDetails.getGtinNumber());
@@ -394,14 +394,16 @@ public class PrintThreadServiceDominoPrinter implements Runnable {
 													qrUid.setUsedDate(LocalDateTime.now());
 													qrUid.setUsed(true);
 													qrUid.setUnitPrice(printOperatorInterfaceDetails.getUnitPrice());
-													
+													qrUid.setProductionOrderNo(printOperatorInterfaceDetails.getProductionOrderNo());
+													qrUid.setVariety(printOperatorInterfaceDetails.getVariety());
+													qrUid.setLotNo(printOperatorInterfaceDetails.getLotNo());
 													log.info("IS_SHORT_URL---->"+printOperatorInterfaceDetails.getUseShortUrl());
 													qrUid.setUseShortUrl(printOperatorInterfaceDetails.getUseShortUrl());
 													if(printOperatorInterfaceDetails.getUseShortUrl().equalsIgnoreCase("YES")) {
 														//qrUid.setShortUrl(appConfig.getProperty("SHORT_URL_PREFIX")+qrUid.getUidCode()+"/"+qrUid.getPlantNumber());
 														//qrUid.setShortUrl(appConfig.getProperty("URL_PREFIX")+qrUid.getGtinNumber()+"/91/"+qrUid.getUidCode()+"/"+qrUid.getPlantNumber());
 														
-														qrUid.setShortUrl(appConfig.getProperty("URL_PREFIX")+qrUid.getGtinNumber()+"/21/"+qrUid.getUidCode());	
+														qrUid.setShortUrl(appConfig.getProperty("URL_PREFIX")+"/21/"+qrUid.getUidCode());	
 
 														sb.append(SOH+"FillSerialVar="+STX+"BNO_VAR"+ETX+","+STX+batchNo+ETX+ETB);
 														 sb.append(SOH+"FillSerialVar="+STX+"MFG_VAR"+ETX+","+STX+mfgDt1+ETX+ETB);

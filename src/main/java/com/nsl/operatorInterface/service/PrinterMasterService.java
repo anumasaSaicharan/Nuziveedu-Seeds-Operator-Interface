@@ -12,6 +12,8 @@ public interface PrinterMasterService {
 
 	List<PrinterMaster> getAllActivePrinters();
 
+	List<PrinterMaster> getAllPrinters();
+
 	PrinterMaster getPrinterById(Long id);
 
 	PrinterMaster getPrinterByLineNumber(String lineNumber);

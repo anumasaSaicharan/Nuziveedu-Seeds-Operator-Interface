@@ -37,14 +37,17 @@ public class UniqueCodePrintedDataDetails {
 	@Column(name = "PRODUCTION_ORDER_NO", length = 50)
 	private String productionOrderNo;
 
-	@Column(name = "CROP_NAME", columnDefinition = "NVARCHAR(50)")
-	private String cropName;
+//	@Column(name = "CROP_NAME", columnDefinition = "NVARCHAR(50)")
+//	private String cropName;
 
 	@Column(name = "VARIETY", columnDefinition = "NVARCHAR(50)")
 	private String variety;
 
 	@Column(name = "UID_CODE", nullable = false, unique = true, length = 14)
 	private String uidCode;
+
+	@Column(name = "LOT_NO", length = 50)
+	private String lotNo;
 
 	@Column(name = "URL")
 	private String url;
@@ -82,12 +85,12 @@ public class UniqueCodePrintedDataDetails {
 	@Column(name = "SHORT_URL")
 	private String shortUrl;
 
-	@ManyToOne
-	@JoinColumn(name = "PRODUCT_ID", columnDefinition = "bigint")
-	private ProductMaster productMaster;
-
-	@Column(name = "PRODUCT_NAME", length = 50)
-	private String productName;
+//	@ManyToOne
+//	@JoinColumn(name = "PRODUCT_ID", columnDefinition = "bigint")
+//	private ProductMaster productMaster;
+//
+//	@Column(name = "PRODUCT_NAME", length = 50)
+//	private String productName;
 
 	@Column(name = "PACK_SIZE", precision = 10, scale = 2)
 	private BigDecimal packSize = BigDecimal.ZERO;
@@ -95,8 +98,8 @@ public class UniqueCodePrintedDataDetails {
 	@Column(name = "PACK_UNIT", length = 5)
 	private String packUnit;
 
-	@Column(name = "GTIN_NUMBER", length = 13)
-	private String gtinNumber;
+//	@Column(name = "GTIN_NUMBER", length = 13)
+//	private String gtinNumber;
 
 	@Column(name = "BATCH_NUMBER", length = 16)
 	private String batchNumber;
@@ -113,23 +116,23 @@ public class UniqueCodePrintedDataDetails {
 	@Column(name = "UNIT_PRICE", precision = 10, scale = 2)
 	private BigDecimal unitPrice = BigDecimal.ZERO;
 
-	@Column(name = "QTY_SATCHES_TO_PRINT")
-	private int qtySatchesToPrint;
+//	@Column(name = "QTY_SATCHES_TO_PRINT")
+//	private int qtySatchesToPrint;
 
-	@Column(name = "START_TIME")
-	private LocalDateTime startTime;
+//	@Column(name = "START_TIME")
+//	private LocalDateTime startTime;
+//
+//	@Column(name = "END_TIME")
+//	private LocalDateTime endTime;
 
-	@Column(name = "END_TIME")
-	private LocalDateTime endTime;
+//	@Column(name = "NO_OF_SATCHES_PRINTED")
+//	private int noOfSachesPrinted;
 
-	@Column(name = "NO_OF_SATCHES_PRINTED")
-	private int noOfSachesPrinted;
+//	@Column(name = "THREAD_ID")
+//	private long threadId;
 
-	@Column(name = "THREAD_ID")
-	private long threadId;
-
-	@Column(name = "PRINTING_STATUS")
-	private String printingStatus;
+//	@Column(name = "PRINTING_STATUS")
+//	private String printingStatus;
 
 	@Column(name = "USER_ID")
 	private String userId;

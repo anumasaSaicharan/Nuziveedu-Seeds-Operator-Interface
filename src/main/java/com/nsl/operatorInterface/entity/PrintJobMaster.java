@@ -11,8 +11,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 
@@ -36,12 +34,15 @@ public class PrintJobMaster {
 	@Column(name = "ACTIVE", nullable = false)
 	private boolean active;
 
-	@ManyToOne
-	@JoinColumn(name = "PRODUCT_ID", columnDefinition = "bigint")
-	private ProductMaster productMaster;
+	@Column(name = "PRODUCTION_ORDER_NO", nullable = false, length = 50)
+	private String productionOrderNo;
 
-	@Column(name = "PRODUCT_NAME", nullable = false, length = 50)
-	private String productName;
+//	@ManyToOne
+//	@JoinColumn(name = "PRODUCT_ID", columnDefinition = "bigint")
+//	private ProductMaster productMaster;
+//
+//	@Column(name = "PRODUCT_NAME", nullable = false, length = 50)
+//	private String productName;
 
 	@Column(name = "VARIETY", nullable = false, length = 50)
 	private String variety;
@@ -52,17 +53,17 @@ public class PrintJobMaster {
 	@Column(name = "PACK_UNIT", nullable = false, length = 5)
 	private String packUnit;
 
-//	@Column(name = "GTIN_NUMBER", nullable = false, length = 13)
-//	private String gtinNumber;
+	@Column(name = "LOT_NO", nullable = false, length = 50)
+	private String lotNo;
 
 	@Column(name = "BATCH_NUMBER", nullable = false, length = 16)
 	private String batchNumber;
 
 	@Column(name = "MANUFACTURE_DATE", nullable = false)
-	private LocalDate manufactureDate; // ⚠️ Can refactor to LocalDateTime
+	private LocalDate manufactureDate;
 
 	@Column(name = "EXPIRY_DATE", nullable = false)
-	private LocalDate expiryDate; // ⚠️ Can refactor to LocalDateTime
+	private LocalDate expiryDate;
 
 	@Column(name = "MRP", precision = 10, scale = 2)
 	private BigDecimal mrp = BigDecimal.ZERO;
@@ -88,8 +89,8 @@ public class PrintJobMaster {
 	@Column(name = "THREAD_ID")
 	private long threadId;
 
-	@Column(name = "COMPANY_CODE")
-	private String companyCode;
+//	@Column(name = "COMPANY_CODE")
+//	private String companyCode;
 
 	@Column(name = "PRINTING_STATUS")
 	private String printingStatus;
@@ -99,6 +100,9 @@ public class PrintJobMaster {
 
 	@Column(name = "SELECTED_TEMPLATE_NAME")
 	private String selectedTemplateName;
+
+	@Column(name = "PRINTER_IP")
+	private String printerIp;
 
 	@Column(name = "SYNC_QTY")
 	private int syncQty;

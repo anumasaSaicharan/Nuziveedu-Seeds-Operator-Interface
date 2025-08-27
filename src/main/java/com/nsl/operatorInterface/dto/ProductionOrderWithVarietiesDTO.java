@@ -10,7 +10,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProductionOrderWithVarietiesDTO {
+
 	private String productionOrderNo;
 	private List<String> varieties;
+	private List<String> lotNos;
 
 }

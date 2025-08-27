@@ -54,6 +54,11 @@ public class PrinterMasterServiceImpl implements PrinterMasterService {
     public List<PrinterMaster> getAllActivePrinters() {
         return printerMasterRepository.findByActiveTrue();
     }
+    
+    @Override
+    public List<PrinterMaster> getAllPrinters() {
+        return printerMasterRepository.findAll();
+    }
 
     @Override
     public PrinterMaster getPrinterById(Long id) {

@@ -299,9 +299,9 @@ public class PrintThreadServiceWorkingForUAT implements Runnable{
 													printedCodesRepository.save(printedCodes);
 													
 													qrUid.setPrintJobMaster(printOperatorInterfaceDetails);
-													qrUid.setProductMaster(printOperatorInterfaceDetails.getProductMaster());
+//													qrUid.setProductMaster(printOperatorInterfaceDetails.getProductMaster());
 													qrUid.setActive(true);
-													qrUid.setProductName(printOperatorInterfaceDetails.getProductName());
+//													qrUid.setProductName(printOperatorInterfaceDetails.getProductName());
 													qrUid.setPackSize(printOperatorInterfaceDetails.getPackSize());
 													qrUid.setPackUnit(printOperatorInterfaceDetails.getPackUnit());
 //													qrUid.setGtinNumber(printOperatorInterfaceDetails.getGtinNumber());
@@ -312,6 +312,9 @@ public class PrintThreadServiceWorkingForUAT implements Runnable{
 													qrUid.setYearofUsage(currentYear);
 													qrUid.setPrintedOn(LocalDateTime.now());
 													qrUid.setUserId(userId);
+													qrUid.setLotNo(printOperatorInterfaceDetails.getLotNo());
+													qrUid.setProductionOrderNo(printOperatorInterfaceDetails.getProductionOrderNo());
+													qrUid.setVariety(printOperatorInterfaceDetails.getVariety());													
 													qrUid.setUnitPrice(printOperatorInterfaceDetails.getUnitPrice());
 													//String url = appConfig.getProperty("URL_PREFIX")+printOperatorInterfaceDetails.getGtinNumber()+"/10/"+printOperatorInterfaceDetails.getBatchNumber()+"/21/"+qrUid.getSerialNumber()+"?11="+mfgDt+"&17="+expDt+"&91="+qrUid.getUidCode();
 													String url = urlPrfix+qrUid.getSerialNumber()+"?11="+mfgDt+"&17="+expDt+"&91="+qrUid.getUidCode();
@@ -323,7 +326,7 @@ public class PrintThreadServiceWorkingForUAT implements Runnable{
 													log.info("IS_SHORT_URL---->"+printOperatorInterfaceDetails.getUseShortUrl());
 													qrUid.setUseShortUrl(printOperatorInterfaceDetails.getUseShortUrl());
 													if(printOperatorInterfaceDetails.getUseShortUrl().equalsIgnoreCase("YES")) {
-														qrUid.setShortUrl(appConfig.getProperty("URL_PREFIX")+qrUid.getGtinNumber()+"/91/"+qrUid.getUidCode()+"/"+qrUid.getPlantNumber());
+														qrUid.setShortUrl(appConfig.getProperty("URL_PREFIX")+"/91/"+qrUid.getUidCode()+"/"+qrUid.getPlantNumber());
 														//qrUid.setShortUrl(appConfig.getProperty("SHORT_URL_PREFIX")+qrUid.getUidCode()+"/"+qrUid.getPlantNumber());
 													}
 													

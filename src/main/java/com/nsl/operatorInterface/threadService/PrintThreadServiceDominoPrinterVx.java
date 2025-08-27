@@ -65,26 +65,6 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class PrintThreadServiceDominoPrinterVx implements Runnable{
 
-//	private static final Log LOG = LogFactory.getLog(PrintThreadServiceDominoPrinterVx.class);
-//	protected HibernateDao hibernateDao;
-//	private Properties appConfig;
-//	private PrintedDataDetailsManager printProductQRCodeDetailsManager;
-//	private List<PrintedDataDetails> printedDataDetailsList;
-//	private PrintJobMaster printOperatorInterfaceDetails;
-//	private PrintJobMasterManager printJobMasterManager;
-//	private Socket socket;
-//	private String userId;
-//	private PrintedCodesManager printedCodesManager;
-//	private PrintedCodes printedCodes;
-//	private PrintedCodesHistory printedCodesHistory;
-//	private PrintedCodesHistoryManager printedCodesHistoryManager;
-//	private DuplicatePrintCodes duplicatePrintCodes;
-//	private DuplicatePrintCodesManager duplicatePrintCodesManager;
-//	private int currentYear;
-//	private QRCodeService qrCodeService;
-//	private static boolean stopThreadVariable = false;
-//	private static int whileLoopFlag = 0;
-
 	protected HibernateDao hibernateDao;
 	private Environment appConfig;
 	private UniqueCodePrintedDataDetailsRepository uniqueCodePrintedDataDetailsRepository;
@@ -101,7 +81,7 @@ public class PrintThreadServiceDominoPrinterVx implements Runnable{
 	private DuplicatePrintCodesRepository duplicatePrintCodesRepository;
 	private int currentYear;
 	private QRCodeService qrCodeService;
-	private static boolean stopThreadVariable = false;
+	private static volatile boolean stopThreadVariable = false;
 	private static int whileLoopFlag = 0;
 	private static final DateTimeFormatter DD_MMM_YYYY_FORMAT = DateTimeFormatter.ofPattern("dd.MMM.yyyy");
 	public static final DateTimeFormatter YYMMDD_FORMATTER = DateTimeFormatter.ofPattern("yyMMdd");
@@ -376,9 +356,9 @@ public class PrintThreadServiceDominoPrinterVx implements Runnable{
 													printedCodesRepository.save(printedCodes);
 													
 													qrUid.setPrintJobMaster(printOperatorInterfaceDetails);
-													qrUid.setProductMaster(printOperatorInterfaceDetails.getProductMaster());
+//													qrUid.setProductMaster(printOperatorInterfaceDetails.getProductMaster());
 													qrUid.setActive(true);
-													qrUid.setProductName(printOperatorInterfaceDetails.getProductName());
+//													qrUid.setProductName(printOperatorInterfaceDetails.getProductName());
 													qrUid.setPackSize(printOperatorInterfaceDetails.getPackSize());
 													qrUid.setPackUnit(printOperatorInterfaceDetails.getPackUnit());
 //													qrUid.setGtinNumber(printOperatorInterfaceDetails.getGtinNumber());
@@ -396,6 +376,9 @@ public class PrintThreadServiceDominoPrinterVx implements Runnable{
 													qrUid.setUsedDate(LocalDateTime.now());
 													qrUid.setUsed(true);
 													qrUid.setUnitPrice(printOperatorInterfaceDetails.getUnitPrice());
+													qrUid.setProductionOrderNo(printOperatorInterfaceDetails.getProductionOrderNo());
+													qrUid.setVariety(printOperatorInterfaceDetails.getVariety());
+													qrUid.setLotNo(printOperatorInterfaceDetails.getLotNo());
 													log.info("IS_SHORT_URL---->"+printOperatorInterfaceDetails.getUseShortUrl());
 													qrUid.setUseShortUrl(printOperatorInterfaceDetails.getUseShortUrl());
 													String bufferDataCmdResp="";
@@ -403,7 +386,7 @@ public class PrintThreadServiceDominoPrinterVx implements Runnable{
 														//qrUid.setShortUrl(appConfig.getProperty("SHORT_URL_PREFIX")+qrUid.getUidCode()+"/"+qrUid.getPlantNumber());
 														//qrUid.setShortUrl(appConfig.getProperty("URL_PREFIX")+qrUid.getGtinNumber()+"/91/"+qrUid.getUidCode()+"/"+qrUid.getPlantNumber());
 														
-														qrUid.setShortUrl(appConfig.getProperty("URL_PREFIX")+qrUid.getGtinNumber()+"/21/"+qrUid.getUidCode());
+														qrUid.setShortUrl(appConfig.getProperty("URL_PREFIX")+"/21/"+qrUid.getUidCode());
 
 														String bufferDataCmd = "BUFFERDATA "+count+" \""+batchNo+"\" \""+mfgDt1+"\" \""+expDt1+"\" \""+mrp+"\" \""+unitPrice+"\" \""+qrUid.getShortUrl()+"\"\r\n";
 														 bufferDataCmdResp = sendCommandToPrinter(bufferDataCmd,socket);

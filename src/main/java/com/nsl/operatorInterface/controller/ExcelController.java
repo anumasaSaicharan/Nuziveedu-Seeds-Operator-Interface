@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -33,5 +34,18 @@ public class ExcelController {
 		ApiResponse response = new ApiResponse(HttpStatus.OK.value(), "File uploaded successfully",file.getOriginalFilename());
 		return ResponseEntity.ok(response);
 	}
+
+	@GetMapping("get-po-based-report")
+	public ApiResponse getPoBasedReport(@RequestParam String po,@RequestParam String requestType) {
+		ApiResponse resp = new ApiResponse();
+		try {
+			resp = excelService.getPoBasedReport(po, requestType);
+	        requestResponseLogService.saveRequestResponse("Get PO Based Report","GET",null,LocalDateTime.now(),LocalDateTime.now(),"");
+	        return new ApiResponse(HttpStatus.OK.value(),"Report generated successfully",resp.getResponse());
+	    } catch (Exception e) {
+	        return new ApiResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(),"Failed to generate report: " + e.getMessage(),null);
+	    }
+	}
+
 
 }

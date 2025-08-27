@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.math.BigDecimal;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.time.LocalDateTime;
@@ -16,6 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -95,25 +97,16 @@ public class PrintOperatorService {
 				log.info("PROD=======>SYNCHRONIZED_BLOCK {}", printDto);
 
 				int year = Calendar.getInstance().get(Calendar.YEAR);
-//				Long unusedCodes = uniqueCodePrintedDataDetailsRepository.getUnUsedCodesCount(printDto.getProductName(),printDto.getCrop(), printDto.getVariety());
-				Long unusedCodes = uniqueCodePrintedDataDetailsRepository.getUnUsedCodesCount(printDto.getProductionOrderNo(),printDto.getVariety());
+//				Long unusedCodes = uniqueCodePrintedDataDetailsRepository.getUnUsedCodesCount(printDto.getProductionOrderNo(),printDto.getVariety());
+				Long unusedCodes = uniqueCodePrintedDataDetailsRepository.getUnUsedCodesCount();
 
 				log.info("Unused Codes Available: {}", unusedCodes);
 
-				// Inventory validation
 				if (unusedCodes != null && unusedCodes > 0 && printDto.getQtySatchesToPrint() > unusedCodes) {
 					String msg = "Inventory Exceeded. Available Codes: " + unusedCodes;
 					return new ApiResponse(400, msg, null);
 				}
 				
-				/// Checking company details
-				CompanyDetails comp = companyDetailsRepository.findByCompanyId(printDto.getCompanyCode());
-				if (comp == null) {
-					resp.setMessage("Invalid company code.");
-					resp.setStatusCode(400);
-					return resp;
-				}
-
 				PrintJobMaster print = null;
 				if (printDto.getPrintJobId() == 0) {
 					print = new PrintJobMaster();
@@ -125,31 +118,36 @@ public class PrintOperatorService {
 				} else {
 					print = printJobMasterRepository.findById(printDto.getPrintJobId()).orElseThrow(() -> new RuntimeException("Print Job not found with id: " + printDto.getPrintJobId()));
 				}
-				ProductMaster product = productMasterRepository.findByProductNameAndPackSize(printDto.getProductName(),printDto.getPackSize());
-
-				print.setProductName(printDto.getProductName());
+//				ProductMaster product = productMasterRepository.findByProductNameAndPackSize(printDto.getProductName(),printDto.getPackSize());
 				print.setPackSize(printDto.getPackSize());
-				print.setPackUnit(printDto.getPackUnit());
 				print.setManufactureDate(printDto.getManufactureDate());
 				print.setExpiryDate(printDto.getExpiryDate());
 				print.setBatchNumber(printDto.getBatchNumber());
 				print.setStartTime(LocalDateTime.now());
 				print.setEndTime(LocalDateTime.now());
-				print.setProductMaster(product);
+				print.setLotNo(printDto.getLotNo());
+				print.setProductionOrderNo(print.getProductionOrderNo());
 				print.setSelectedTemplateName(printDto.getTemplateName().trim());
 				print.setUserId(request.getHeader("userId"));
 				print.setThreadId(Thread.currentThread().getId());
-//				print.setUnitPrice(printDto.getUnitPrice()!=null?printDto.getUnitPrice():printDto.getProduct().getUnitPrice());
+				print.setUnitPrice(printDto.getUnitPrice() != null ? printDto.getUnitPrice() : BigDecimal.ZERO);
+				print.setMrp(printDto.getMrp());
+				print.setVariety(printDto.getVariety());
+				print.setPrinterIp(printDto.getPrinterIp());
+				print.setPackUnit(printDto.getPackUnit());
+
+//				print.setProductMaster(product);
+//				print.setProductName(printDto.getProductName());
 //				print.setUnitPrice(printDto.getUnitPrice() != null ? printDto.getUnitPrice() : product.getUnitPrice());
 //				print.setUseShortUrl(printDto.getUseShortUrl());
 //				print.setCompanyCode(printDto.getCompanyCode());
 //				print.setProductMaster(productManager.getProductsByNameAndSize(printDto.getProductName(),printDto.getPackSize()+""));
-//				print.setMrp(printDto.getMrp());
 //				print.setProductMaster(printDto.getProduct());
 //				print.setGtinNumber(printDto.getGtinNumber());
 
 				log.info("==printDto.getPrintJobId()==BEFORE>" + printDto.getPrintJobId());
-	            List<UniqueCodePrintedDataDetails> codesList = uniqueCodePrintedDataDetailsRepository.fetchUnusedCodes(printDto.getQtySatchesToPrint(), year,printDto.getProductionOrderNo(),printDto.getVariety());
+//	            List<UniqueCodePrintedDataDetails> codesList = uniqueCodePrintedDataDetailsRepository.fetchUnusedCodes(printDto.getQtySatchesToPrint(), year,printDto.getProductionOrderNo(),printDto.getVariety());
+	            List<UniqueCodePrintedDataDetails> codesList = uniqueCodePrintedDataDetailsRepository.fetchUnusedCodes(printDto.getQtySatchesToPrint());
 
 				if (codesList != null && !codesList.isEmpty()) {
 					if (printDto.getQtySatchesToPrint() <= codesList.size()) {
@@ -166,7 +164,7 @@ public class PrintOperatorService {
 					return resp;
 				}
 
-			    PrinterMaster printerDetails = printerMasterRepository.findByLineNumberAndActiveTrue(printDto.getLineCode());
+			    PrinterMaster printerDetails = printerMasterRepository.findByLineNumberAndActiveTrue(printDto.getPrinterIp());
 			    if (printerDetails == null) {
 			        log.error("Printers Details are null. Unable to proceed with connect to Printers");
 			        resp.setMessage("Printers details are missing. Cannot connect to the printers.");
@@ -178,25 +176,20 @@ public class PrintOperatorService {
 			    Socket printerSocket = null;
 			    boolean printerConnectionSuccessful = false;
 			    try {
-			        // Retrieve socket for current line
-			    	printerSocket = lineSocketMap.get(printDto.getLineCode());
+			    	printerSocket = lineSocketMap.get(printDto.getPrinterIp());
 
-			        // Check if socket is valid
 			        if (printerSocket == null || printerSocket.isClosed() || !printerSocket.isConnected()) {
-			            // Connect new socket
 			        	printerSocket = connectToPrinter(printerDetails);
-			            
 			            if (printerSocket == null || !printerSocket.isConnected()) {
-			                log.error("Failed to connect VideoJet Printer for line " + printDto.getLineCode());
-			                resp.setMessage("VideoJet Printer Connection Failed for line " + printDto.getLineCode() + ". Please check IP: " + printerDetails.getPrinterIp() + " Port: " + printerDetails.getPrinterPort());
+			                log.error("Failed to connect Printer for line " + printDto.getPrinterIp());
+			                resp.setMessage("Printer Connection Failed for line " + printDto.getPrinterIp() + ". Please check IP: " + printerDetails.getPrinterIp() + " Port: " + printerDetails.getPrinterPort());
 			                resp.setStatusCode(500);
 			                return resp;
 			            }
-			            // Store the new connection in the map
-			            lineSocketMap.put(printDto.getLineCode(), printerSocket);
-			            log.info("New VideoJet Printer Connection established and stored for line: " + printDto.getLineCode());
+			            lineSocketMap.put(printDto.getPrinterIp(), printerSocket);
+			            log.info("New Printer Connection established and stored for line: " + printDto.getPrinterIp());
 			        } else {
-			            log.info("Reusing existing VideoJet Printer Connection for line: " + printDto.getLineCode());
+			            log.info("Reusing existing Printer Connection for line: " + printDto.getPrinterIp());
 			        }
 			        printerConnectionSuccessful = true;
 			    } catch (Exception e) {
@@ -205,8 +198,6 @@ public class PrintOperatorService {
 			        resp.setStatusCode(500);
 			        return resp;
 			    } 
-			    
-				//The below code to loop codes using thread
 	   			List<UniqueCodePrintedDataDetails> emptyList = new ArrayList<>();
 	   			PrintedCodesHistory codesHistory = new PrintedCodesHistory();
 	   			DuplicatePrintCodes duplicatecodes = new DuplicatePrintCodes();
@@ -240,31 +231,24 @@ public class PrintOperatorService {
 	}
 
 	@SuppressWarnings("unchecked")
-	public ApiResponse savePrintCodeDetails_UAT(HttpServletRequest request, @Valid PrintCodesRequest printDto) {
+	public ApiResponse savePrintCodeDetails_UAT(HttpServletRequest request, @Valid PrintCodesRequest printDto) throws JSONException {
 		ApiResponse resp = new ApiResponse();
 		try {
 			log.info("Phase======================================================1");
 			synchronized (this) {
 				log.info("=UAT=SYNCHRONIZED_BLOCK==" + printDto);
 				int year = Calendar.getInstance().get(Calendar.YEAR);
-				Long unusedCodes = uniqueCodePrintedDataDetailsRepository.getUnUsedCodesCount(printDto.getProductionOrderNo(),printDto.getVariety());
+//				Long unusedCodes = uniqueCodePrintedDataDetailsRepository.getUnUsedCodesCount(printDto.getProductionOrderNo(),printDto.getVariety());
+				Long unusedCodes = uniqueCodePrintedDataDetailsRepository.getUnUsedCodesCount();
 				log.info("Unused Codes Available: {}", unusedCodes);
 				log.info("Phase======================================================2");
 
-				// Inventory validation
 				if (unusedCodes != null && unusedCodes > 0 && printDto.getQtySatchesToPrint() > unusedCodes) {
 					String msg = "Inventory Exceeded. Available Codes: " + unusedCodes;
 					return new ApiResponse(400, msg, null);
 				}
 				log.info("Phase======================================================3");
 
-//				/// Checking company details
-//				CompanyDetails comp = companyDetailsRepository.findByCompanyId(printDto.getCompanyCode());
-//				if (comp == null) {
-//					resp.setMessage("Invalid company code.");
-//					resp.setStatusCode(400);
-//					return resp;
-//				}
 				PrintJobMaster print=null;
 				if (printDto.getPrintJobId() == 0) {
 					print = new PrintJobMaster();
@@ -278,36 +262,36 @@ public class PrintOperatorService {
 				}
 //				ProductMaster product = productMasterRepository.findByProductNameAndPackSize(printDto.getProductName(),printDto.getPackSize());
 				log.info("Phase======================================================4");
-
 				print.setVariety(printDto.getVariety());
-				print.setProductName(printDto.getProductName());
 				print.setPackSize(printDto.getPackSize());
-				print.setPackUnit(printDto.getPackUnit());
 				print.setManufactureDate(printDto.getManufactureDate());
 				print.setExpiryDate(printDto.getExpiryDate());
 				print.setMrp(printDto.getMrp());
-//				print.setProductMaster(product);
 				print.setBatchNumber(printDto.getBatchNumber());
 				print.setStartTime(LocalDateTime.now());
 				print.setEndTime(LocalDateTime.now());
-				print.setCompanyCode(printDto.getCompanyCode());
 				print.setSelectedTemplateName(printDto.getTemplateName().trim());
 				print.setUserId(request.getHeader("userId"));
 				print.setThreadId(Thread.currentThread().getId());
-				print.setStatus("UAT");
+				print.setStatus("Pending");
 				print.setUnitPrice(printDto.getUnitPrice());
-
+				print.setProductionOrderNo(printDto.getProductionOrderNo());
+				print.setPrinterIp(printDto.getPrinterIp());
+				print.setPackUnit(printDto.getPackUnit());
+				print.setLotNo(printDto.getLotNo());
+//				print.setProductName(printDto.getProductName());
+//				print.setCompanyCode(printDto.getCompanyCode());
+//				print.setProductMaster(product);
 //				print.setProductMaster(printDto.getProduct());
 //				print.setGtinNumber(printDto.getGtinNumber());
 				print.setUseShortUrl(printDto.getUseShortUrl());
 				log.info("Phase======================================================5");
 
 				log.info("==printDto.getPrintJobId()==BEFORE>" + printDto.getPrintJobId());
-//	            List<UniqueCodePrintedDataDetails> codesList = uniqueCodePrintedDataDetailsRepository.fetchUnusedCodes(printDto.getQtySatchesToPrint(), year);
-	            List<UniqueCodePrintedDataDetails> codesList = uniqueCodePrintedDataDetailsRepository.fetchUnusedCodes(printDto.getQtySatchesToPrint(), year,printDto.getProductionOrderNo(),printDto.getVariety());
-
+//	            List<UniqueCodePrintedDataDetails> codesList = uniqueCodePrintedDataDetailsRepository.fetchUnusedCodes(printDto.getQtySatchesToPrint(), year,printDto.getProductionOrderNo(),printDto.getVariety());
+	            List<UniqueCodePrintedDataDetails> codesList = uniqueCodePrintedDataDetailsRepository.fetchUnusedCodes(printDto.getQtySatchesToPrint());
 				log.info("Phase======================================================6");
-
+				
 	            if (codesList != null && !codesList.isEmpty()) {
 					log.info("Phase======================================================6.15====>"+codesList.size());
 
@@ -386,6 +370,7 @@ public class PrintOperatorService {
 				jsonResponse.put("id", print.getId());
 				jsonResponse.put("printedCount", Count);
 
+				resp.setResponse(jsonResponse.toString());
 				resp.setMessage("Success");
 				resp.setStatusCode(200);
 			}
@@ -393,6 +378,9 @@ public class PrintOperatorService {
 			resp.setMessage("An unexpected error occurred while processing the request.");
 			resp.setStatusCode(500);
 			log.info("An unexpected error occurred while processing the thread request.");
+			log.info("Exception=====>"+e.getStackTrace());
+			log.info("Exception===savePrintCodeDetails_UAT==>"+e.getMessage());
+
 			return resp;
 		}
 
@@ -878,8 +866,6 @@ public class PrintOperatorService {
 			if (socket != null) {
 				log.info("== SOCKET CONNECTION NOT AVAILABLE ==");
 				setPrinterOffline();
-				// socket.close();
-				// socket=null;
 			}
 
 			forLoopFlag = false;
@@ -896,58 +882,8 @@ public class PrintOperatorService {
 	public String setPrinterOffline() {
 		String resp = "";
 		try {
-//			if ("VIDEOJET_TP".equalsIgnoreCase(appConfig.getProperty("PRINTER_TYPE"))) {
-//				String offlineCmd = "SST|4|\r";
-//				OutputStream output = null;
-//				PrintThreadServiceWorking thrd = new PrintThreadServiceWorking();
-//				List<PrintedDataDetails> emptyList = new ArrayList<>();
-//				thrd.setPrintedDataDetailsList(emptyList);
-//				thrd.setStopThreadVariable(true);
-//
-//				PrintThreadServiceWorking.setStopThreadVariable(true);
-//				PrintThreadServiceWorking.setWhileLoopFlag(1);
-//				if (socket != null) {
-//					try {
-//						BufferedReader reader = null;
-//						output = socket.getOutputStream();
-//						reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "utf-8"));
-//						output.write(offlineCmd.getBytes());
-//						String response = reader.readLine();
-//						resp = response.toString();
-//					} catch (Exception e) {
-//						log.info("Exec==>" + e.getStackTrace(), e);
-//						resp = "ERROR";
-//					}
-//				}
-//			} else if ("VIDEOJET_LP".equalsIgnoreCase(appConfig.getProperty("PRINTER_TYPE"))) {
-//				String offlineCmd = "Stop;\r\n";
-//				OutputStream output = null;
-//				PrintThreadServiceVideoJetLaserPrinter thrd = new PrintThreadServiceVideoJetLaserPrinter();
-//				List<PrintedDataDetails> emptyList = new ArrayList<>();
-//				thrd.setPrintedDataDetailsList(emptyList);
-//				thrd.setStopThreadVariable(true);
-//
-//				PrintThreadServiceVideoJetLaserPrinter.setStopThreadVariable(true);
-//				PrintThreadServiceVideoJetLaserPrinter.setWhileLoopFlag(1);
-//				if (socket != null) {
-//					try {
-//						BufferedReader reader = null;
-//						output = socket.getOutputStream();
-//						reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "utf-8"));
-//						output.write(offlineCmd.getBytes());
-//						String response = reader.readLine();
-//						resp = response.toString();
-//					} catch (Exception e) {
-//						log.info("Exec==>" + e.getStackTrace(), e);
-//						resp = "ERROR";
-//					}
-//				}
-//			} else 
-//				
-				
-				if ("DOMINO_TPO_V".equalsIgnoreCase(appConfig.getProperty("PRINTER_TYPE"))) {
+			if ("DOMINO_TPO_V".equalsIgnoreCase(appConfig.getProperty("PRINTER_TYPE")) && "LIVE".equalsIgnoreCase(appConfig.getProperty("SERVER_TYPE"))) {
 				String offlineCmd = SOH + "PausePrint" + ETB;
-				;
 				OutputStream output = null;
 				PrintThreadServiceDominoPrinter thrd = new PrintThreadServiceDominoPrinter();
 				List<UniqueCodePrintedDataDetails> emptyList = new ArrayList<>();
@@ -969,7 +905,7 @@ public class PrintOperatorService {
 						resp = "ERROR";
 					}
 				}
-			} else if ("DOMINO_TPO_VX".equalsIgnoreCase(appConfig.getProperty("PRINTER_TYPE"))) {
+			} else if ("DOMINO_TPO_VX".equalsIgnoreCase(appConfig.getProperty("PRINTER_TYPE")) && "LIVE".equalsIgnoreCase(appConfig.getProperty("SERVER_TYPE"))) {
 				log.info("ENTER TO SET PRINTER OFFLINE===========>");
 				String offlineCmd = "BUFFERCLEAR\r\n";
 				OutputStream output = null;
@@ -980,28 +916,16 @@ public class PrintOperatorService {
 				PrintThreadServiceDominoPrinterVx.setStopThreadVariable(true);
 				PrintThreadServiceDominoPrinterVx.setWhileLoopFlag(1);
 				log.info("=== WHILE LOOP FLAG ===::" + PrintThreadServiceDominoPrinterVx.getWhileLoopFlag());
-				/*
-				 * if(socket!=null) { try { BufferedReader reader= null; output =
-				 * socket.getOutputStream(); reader = new BufferedReader(new
-				 * InputStreamReader(socket.getInputStream(),"utf-8"));
-				 * output.write(offlineCmd.getBytes()); String response = reader.readLine();
-				 * resp= response.toString(); } catch(Exception e) {
-				 * log.info("Exec==>"+e.getStackTrace(),e); resp="ERROR"; } }
-				 */
-			}
-			
-//			else if ("MARKEM_IMAGE".equalsIgnoreCase(appConfig.getProperty("PRINTER_TYPE"))) {
-//				log.info("ENTER TO SET PRINTER OFFLINE===========>");
-//				PrintThreadServiceMIPrinter thrd = new PrintThreadServiceMIPrinter();
-//				List<PrintedDataDetails> emptyList = new ArrayList<>();
+			} else {
+				log.info("ENTER TO SET UAT PRINTER OFFLINE===========>");
+//				PrintThreadServiceWorkingForUAT thrd = new PrintThreadServiceWorkingForUAT();
+				List<UniqueCodePrintedDataDetails> emptyList = new ArrayList<>();
 //				thrd.setPrintedDataDetailsList(emptyList);
 //				thrd.setStopThreadVariable(true);
-//				PrintThreadServiceMIPrinter.setStopThreadVariable(true);
-//				PrintThreadServiceMIPrinter.setWhileLoopFlag(1);
-//				log.info("Markem Machine Stopped===========>");
-//
-//				log.info("=== WHILE LOOP FLAG ===::" + PrintThreadServiceMIPrinter.getWhileLoopFlag());
-//			}
+				PrintThreadServiceWorkingForUAT.setStopThreadVariable(true);
+				PrintThreadServiceWorkingForUAT.setWhileLoopFlag(1);
+				log.info("=== WHILE LOOP FLAG ===::" + PrintThreadServiceDominoPrinterVx.getWhileLoopFlag());
+			}
 		} catch (Exception e) {
 			log.info("Final Exec==>" + e.getStackTrace(), e);
 		}

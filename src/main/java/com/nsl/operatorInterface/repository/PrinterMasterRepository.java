@@ -9,11 +9,9 @@ import com.nsl.operatorInterface.entity.PrinterMaster;
 public interface PrinterMasterRepository extends JpaRepository<PrinterMaster, Long> {
 
 	List<PrinterMaster> findByActiveTrue();
-	
-    // Custom finder
-    PrinterMaster findByLineNumber(String lineNumber);
 
-    // OR if you also want to check only active printers
-    PrinterMaster findByLineNumberAndActiveTrue(String lineNumber);
+	PrinterMaster findByLineNumber(String lineNumber);
+
+	PrinterMaster findByLineNumberAndActiveTrue(String printerIp);
 
 }

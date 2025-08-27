@@ -41,7 +41,7 @@ public class PrinterMasterController {
     // Get all active printers
     @GetMapping("view-all-printers")
     public ResponseEntity<ApiResponse> getAllPrinters() {
-        List<PrinterMaster> printers = printerMasterService.getAllActivePrinters();
+        List<PrinterMaster> printers = printerMasterService.getAllPrinters();
         return ResponseEntity.ok(new ApiResponse(200, "Active printers fetched successfully", printers));
     }
 

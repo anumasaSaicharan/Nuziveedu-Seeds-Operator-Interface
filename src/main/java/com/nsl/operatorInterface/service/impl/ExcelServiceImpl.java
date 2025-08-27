@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.nsl.operatorInterface.dto.ApiResponse;
 import com.nsl.operatorInterface.entity.PackingOrderDetails;
 import com.nsl.operatorInterface.entity.PrintedCodesHistory;
+import com.nsl.operatorInterface.entity.UniqueCodePrintedDataDetails;
 import com.nsl.operatorInterface.repository.PackingOrderDetailsRepository;
 import com.nsl.operatorInterface.repository.PrintedCodesHistoryRepository;
 import com.nsl.operatorInterface.repository.UniqueCodePrintedDataDetailsRepository;
@@ -210,5 +212,45 @@ public ApiResponse exportCsvManually() {
     }
 }
 
+public ApiResponse getPoBasedReport(String po, String requestType) {
+	ApiResponse resp = new ApiResponse();
+	try {
+		List<UniqueCodePrintedDataDetails> printedCodesList = uniqueCodePrintedDataDetailsRepository.getPoBasedPrintedCodes(po);
+		if ("GRID".equalsIgnoreCase(requestType)) {
+			resp.setResponse(printedCodesList);
+		} else {
+			Files.createDirectories(Paths.get(exportDir));
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
+			String timestamp = LocalDateTime.now().format(formatter);
+			String fileName = "PrintedCodes_" + timestamp + ".csv";
+			String filePath = exportDir + fileName;
+			
+			try (PrintWriter writer = new PrintWriter(new FileWriter(filePath))) {
+			    writer.println("PRODUCTION_ORDER_NO,VARIETY,UID_CODE,LOT_NO,URL,STATUS,SERIAL_NUMBER,PRINTED_ON,USED_DATE");
+
+			    for (UniqueCodePrintedDataDetails record : printedCodesList) {
+			        writer.println(
+			            record.getProductionOrderNo() + "," +
+			            record.getVariety() + "," +
+			            record.getUidCode() + "," +
+			            record.getLotNo() + "," +
+			            record.getUrl() + "," +
+			            record.getStatus() + "," +
+			            record.getSerialNumber() + "," +
+			            record.getPrintedOn() + "," +
+			            record.getUsedDate()
+			        );
+			    }
+			}
+	        resp.setResponse(filePath);
+		}
+		resp.setStatusCode(200);
+		resp.setMessage("Success");
+	} catch (Exception e) {
+		log.error("Error_in_getPoBasedReport_", e);
+		return new ApiResponse(500, "Failed to export CSV: " + e.getMessage(), null);
+	}
+	return resp;
+}
 
 }
